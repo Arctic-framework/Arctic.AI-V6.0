@@ -1,0 +1,177 @@
+import cv2
+from cvzone.HandTrackingModule import HandDetector
+import keyboard
+import pyautogui
+global X1
+global Y1
+MESHRANGE1 = 1
+PERMALISTMESSAGE = []
+PERMALIST = []
+PERMALIST_Y = []
+PERMAFINGERDATA = []
+curF1calc_Y = []
+############################# Not for comercial use without direct permission.
+print('This code is property of Brytan Kelly. Not for commercial use without direct permission.')
+print('This code is property of Brytan Kelly, although this code may be used freely by anyone as long as credit is givin.')
+curMESHRANGE = 1
+print('welcome to the ARCTIC.AI framework. Created by Brytan.M.Kelly 9/3/2022')
+
+print('Press X tox activate the snapshot program or to program in a new signal')
+curLIST1 = []
+curLIST_Y = []
+DATA_X = []
+# webcam
+cap = cv2.VideoCapture(0)
+cap.set(3, 1280)
+cap.set(4, 720)
+# detector for hands
+detector = HandDetector(maxHands=1, detectionCon=.7)
+while True:
+    success, img = cap.read()
+    # hand tracking
+    hands, img = detector.findHands(img)
+    DATA_X = []
+    if hands:
+        hand = hands[0]
+        lmList = hand['lmList']
+        for lm in lmList:
+            DATA_X.extend(lm)
+            ################################## pinch test which is disabled by default.
+            INDEXFINGER = lmList[8]
+            THUMB = lmList[4]
+            THUMB = THUMB[1]
+            INDEXFINGER = INDEXFINGER[1]
+            WRIST = lmList[0]
+            X1, Y1, Z1 = WRIST
+            THUMB3 = lmList[4]
+            X2, Y2, Z2 = THUMB3
+            FINAL = abs(THUMB-INDEXFINGER)
+
+#################################Constant LM (Land Mark)checker for Snapshot program.
+        def CUR():
+            global curLIST1
+            global curFUP
+            global REALFINGERSUP
+            global SCORE
+            curFCALMAIN = 0
+            curFUP = detector.fingersUp(hand)
+            curMESHPOINT = 0
+            REALFINGERSUP = detector.fingersUp(hand)
+            curLIST1 = []
+            curLIST1.clear()
+            for iy in range(20):
+                curF1calc = lmList[curFCALMAIN]
+                curF1calc_Y = curF1calc[1]
+                curF1calc = curF1calc[0]
+                curFCALMAIN += 1
+                for iz in range(20):
+                    curMESHRANGE1 = lmList[curMESHPOINT]
+                    curMESHRANGE2 = lmList[curMESHPOINT]
+                    curMESHRANGE1 = curMESHRANGE1[0]
+                    curMESHRANGE2 = curMESHRANGE2[1]
+                    curLIST1.append((abs(int(curMESHRANGE1)-(int(curF1calc)))))
+                    curLIST_Y.append((abs(int(curMESHRANGE2) - (int(curF1calc_Y)))))
+                    curMESHPOINT += 1
+                curMESHPOINT = 0
+            SSD = curLIST1
+            print(SSD)
+        ################################################# This code basicaly just asks the user to descrbe what hand signal they are doing and saves it to a list along with the landmark data.
+        try:
+            DIRECTORY = 1
+            if keyboard.is_pressed('x'):
+                MESSAGE1=pyautogui.prompt(title='SNAPSHOT ACTIVATED', text='what is your sign', default='')
+                LIST1 = []
+                LIST_Y = []
+                LIST_Y.clear()
+                LIST1.clear()
+                LIST_Y = curLIST_Y
+                LIST1 = curLIST1
+                F1 = LIST1[DIRECTORY]
+                F1_Y = LIST_Y[DIRECTORY]
+                PERMALIST.append(LIST1)
+                PERMALIST_Y.append(LIST_Y)
+                PERMALISTMESSAGE.append(MESSAGE1)
+                curFUP = detector.fingersUp(hand)
+                PERMAFINGERDATA.append(curFUP)
+
+            SCORE = 0
+            for iz in range(400):
+                F1 = LIST1[DIRECTORY]
+                F1_Y = LIST_Y[DIRECTORY]
+                F2 = curLIST1[DIRECTORY]
+                F2_Y = curLIST_Y[DIRECTORY]
+                if F1-100 <= F2:
+                    if F1+100 >= F2:
+                        SCORE += 1
+                if F1_Y-1000 <= F2_Y:
+                    if F1_Y+1000 >= F2_Y:
+                        SCORE += 10
+            print(SCORE)
+            if SCORE < 100:
+                cv2.putText(img, "welp thats it", (100, 100), cv2.FONT_HERSHEY_COMPLEX,
+                            5, (255, 0, 255), 5)
+
+
+
+
+
+
+                DIRECTORY += 1
+            SCORE = 0
+        except:
+            print('for the love of god click x you numbskull')
+
+################################################### The Render Function basicaly just tests for all of the points and if they match the saved points displays the text.
+        def RENDER(DATA_X, DATA_Y, USE_FINGER_DATA, FINGER_UP_DATA, MESSAGE, RANGE_X, RANGE_Y):
+            try:
+                SCORE = 0
+                DIRECTORY = 1
+                for iz in range(400):
+                    F1 = DATA_X[DIRECTORY]
+                    F1_Y = DATA_Y[DIRECTORY]
+                    F2 = curLIST1[DIRECTORY]
+                    F2_Y = curLIST_Y[DIRECTORY]
+                    if F1 - RANGE_X <= F2:
+                        if F1 + RANGE_X >= F2:
+                            SCORE += 1
+                    if F1_Y - RANGE_Y<= F2_Y:
+                        if F1_Y + RANGE_Y >= F2_Y:
+                            SCORE += 1
+                    if USE_FINGER_DATA == False:
+                        if SCORE > 790:
+                            print('well the score is perfect so this must be right')
+                            cv2.putText(img, MESSAGE, (100, 100), cv2.FONT_HERSHEY_COMPLEX,
+                                        5, (255, 0, 255), 5)
+                    if USE_FINGER_DATA == True:
+                        if SCORE > 790:
+                            if curFUP == FINGER_UP_DATA:
+                                print('well the score is perfect so this must be right')
+                                cv2.putText(img, MESSAGE, (100, 100), cv2.FONT_HERSHEY_COMPLEX,
+                                        5, (255, 0, 255), 5)
+
+
+
+
+
+                    else:
+                        print(f'das current score {SCORE} is da score')
+                    DIRECTORY += 1
+                SCORE = 0
+            except:
+                print(f'hi')
+
+################################################################################### renders cur or current finger position always.
+        CUR()
+        try:
+                ######### always trys too render certain gestures and checks millions of points of DATA_X and DATA_Y
+            for i in range(len(PERMALIST)):
+                RENDERME = PERMALIST[RENDERDIRECTORY]
+                RENDERME_Y = PERMALIST_Y[RENDERDIRECTORY]
+                RENDER(RENDERME, RENDERME_Y, True, PERMAFINGERDATA[RENDERDIRECTORY], PERMALISTMESSAGE[RENDERDIRECTORY], 80, 80) # this should be 40, 40 for small data sets the larger tha data set the smaller it should be
+                RENDERDIRECTORY += 1
+            RENDERDIRECTORY = 0
+        except:
+            print(f'')
+
+    cv2.imshow('image', img)
+    cv2.waitKey(1)
